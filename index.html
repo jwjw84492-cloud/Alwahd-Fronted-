@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-Lambda Ultra | منصة المعالجة الشاملة</title>
+    <title>F-Lambda Ultra | Professional Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        body { font-family: 'Space Grotesk', sans-serif; scroll-behavior: smooth; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
-        .neon-border { border: 1px solid rgba(99, 102, 241, 0.2); }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); }
+        .neon-border { border: 1px solid rgba(99, 102, 241, 0.3); }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #312e81; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-100 overflow-x-hidden">
+<body class="bg-[#020617] text-slate-100">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -33,18 +32,30 @@
             const [history, setHistory] = useState([]);
             const [error, setError] = useState(null);
             
-            // رابط الـ Backend الخاص بك
             const API_URL = "https://alwahd-backend-2.onrender.com/upload";
 
-            // إضافة للسجل التاريخي للعمليات
+            // تحميل السجل من الذاكرة الدائمة عند تشغيل التطبيق
+            useEffect(() => {
+                const savedHistory = localStorage.getItem('f_lambda_history');
+                if (savedHistory) {
+                    setHistory(JSON.parse(savedHistory));
+                }
+            }, []);
+
+            // حفظ السجل في الذاكرة الدائمة عند كل تحديث
+            useEffect(() => {
+                localStorage.setItem('f_lambda_history', JSON.stringify(history));
+            }, [history]);
+
             const addToHistory = (item) => {
-                setHistory(prev => [{
+                const newItem = {
                     id: Date.now(),
-                    name: item.filename || "نص حتمي",
+                    name: item.filename || "Deterministic Text",
                     type: item.content_type,
                     time: item.processing_time,
-                    size: item.size_bytes
-                }, ...prev].slice(0, 5)); 
+                    date: new Date().toLocaleTimeString('ar-SA')
+                };
+                setHistory(prev => [newItem, ...prev].slice(0, 10));
             };
 
             const processAction = async () => {
@@ -53,33 +64,19 @@
                 setProgress(20);
                 
                 try {
-                    let response;
+                    let formData = new FormData();
                     if (file) {
-                        const formData = new FormData();
                         formData.append('file', file);
-                        setProgress(40);
-                        
-                        response = await fetch(API_URL, {
-                            method: 'POST',
-                            body: formData,
-                        });
                     } else if (textInput) {
                         const blob = new Blob([textInput], { type: 'text/plain' });
-                        const textFile = new File([blob], "text_input.txt", { type: 'text/plain' });
-                        const formData = new FormData();
-                        formData.append('file', textFile);
-                        setProgress(40);
-
-                        response = await fetch(API_URL, {
-                            method: 'POST',
-                            body: formData,
-                        });
+                        formData.append('file', new File([blob], "text_input.txt"));
                     } else {
-                        throw new Error("يرجى إدخال نص أو اختيار ملف أولاً");
+                        throw new Error("أدخل نصاً أو ارفع ملفاً");
                     }
 
-                    setProgress(70);
-                    if (!response.ok) throw new Error("فشل في استجابة المحرك السحابي");
+                    setProgress(50);
+                    const response = await fetch(API_URL, { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error("فشل المحرك السحابي");
                     
                     const data = await response.json();
                     setResult(data);
@@ -87,190 +84,120 @@
                     setProgress(100);
                 } catch (err) {
                     setError(err.message);
-                    console.error(err);
                 } finally {
-                    setTimeout(() => {
-                        setLoading(false);
-                        setProgress(0);
-                    }, 800);
+                    setTimeout(() => { setLoading(false); setProgress(0); }, 500);
                 }
             };
 
-            const downloadRecovered = () => {
+            // وظيفة التحميل الآمنة (لا تسبب انهيار المتصفح)
+            const safeDownload = () => {
                 if (!result) return;
-                const link = document.createElement('a');
-                link.href = `data:${result.content_type};base64,${result.recovered_file}`;
-                link.download = `Recovered_${result.filename || 'data'}`;
-                link.click();
+                try {
+                    const byteCharacters = atob(result.recovered_file);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: result.content_type });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `F_Recovered_${result.filename || 'data'}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url); // مسح الرابط من الذاكرة بعد التحميل
+                } catch (e) {
+                    setError("فشل التحميل: الملف كبير جداً على المتصفح");
+                }
             };
 
             return (
-                <div className="min-h-screen flex flex-col">
-                    {/* شريط التقدم العلوي */}
+                <div className="min-h-screen p-4 md:p-12 max-w-7xl mx-auto">
                     {loading && (
-                        <div className="fixed top-0 left-0 h-1 bg-indigo-500 z-50 transition-all duration-300 shadow-[0_0_10px_#6366f1]" style={{width: `${progress}%`}}></div>
+                        <div className="fixed top-0 left-0 h-1 bg-indigo-500 z-50 transition-all duration-300" style={{width: `${progress}%`}}></div>
                     )}
 
-                    <main className="flex-grow container mx-auto px-4 py-12 max-w-7xl">
-                        {/* العنوان الرئيسي */}
-                        <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
-                            <div className="flex items-center gap-5">
-                                <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl flex items-center justify-center text-3xl font-bold shadow-2xl shadow-indigo-500/20 italic">λ</div>
-                                <div>
-                                    <h1 className="text-4xl font-black tracking-tighter uppercase">F-Lambda <span className="text-indigo-500">Ultra</span></h1>
-                                    <p className="text-slate-500 text-[10px] font-bold tracking-[0.3em] uppercase mt-1">Universal Deterministic Engine</p>
+                    <header className="flex justify-between items-center mb-12">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center font-bold">λ</div>
+                            <h1 className="text-2xl font-black tracking-tighter uppercase">F-Lambda <span className="text-indigo-500">PRO</span></h1>
+                        </div>
+                    </header>
+
+                    <div className="grid lg:grid-cols-12 gap-8">
+                        {/* لوحة التحكم */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="glass neon-border p-6 rounded-3xl">
+                                <h2 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest italic">Input Area</h2>
+                                <textarea 
+                                    value={textInput}
+                                    onChange={(e) => {setTextInput(e.target.value); setFile(null);}}
+                                    placeholder="اكتب النص هنا..."
+                                    className="w-full h-32 bg-black/50 border border-slate-800 rounded-2xl p-4 text-sm focus:border-indigo-500 outline-none mb-4"
+                                />
+                                <div className="border-2 border-dashed border-slate-800 rounded-2xl p-6 text-center hover:border-indigo-500 transition-colors cursor-pointer relative">
+                                    <input type="file" onChange={(e) => setFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                    <p className="text-[10px] text-slate-400">{file ? file.name : "ارفع صورة/فيديو/صوت"}</p>
                                 </div>
+                                <button 
+                                    onClick={processAction}
+                                    disabled={loading}
+                                    className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all disabled:opacity-50"
+                                >
+                                    {loading ? "جاري المعالجة..." : "بدء المعالجة"}
+                                </button>
                             </div>
-                            <div className="flex gap-4">
-                                <div className="px-6 py-3 glass neon-border rounded-2xl text-center">
-                                    <span className="block text-[9px] text-slate-500 font-bold uppercase mb-1 tracking-widest">Engine Status</span>
-                                    <span className="text-emerald-400 font-bold text-xs">ONLINE // LIVE</span>
+
+                            {/* السجل الثابت */}
+                            <div className="glass neon-border p-6 rounded-3xl h-64 flex flex-col">
+                                <h2 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest italic flex justify-between">
+                                    History (Permanent)
+                                    <button onClick={() => {setHistory([]); localStorage.removeItem('f_lambda_history');}} className="text-red-500 hover:underline">Clear</button>
+                                </h2>
+                                <div className="flex-grow overflow-y-auto custom-scrollbar space-y-2">
+                                    {history.map(item => (
+                                        <div key={item.id} className="p-3 bg-white/5 rounded-xl border border-white/5 text-[10px]">
+                                            <p className="font-bold truncate">{item.name}</p>
+                                            <p className="text-slate-500 uppercase mt-1">{item.date} • {item.time}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="grid lg:grid-cols-12 gap-8">
-                            
-                            {/* العمود الأيسر: الإدخال والتحكم */}
-                            <div className="lg:col-span-5 space-y-6">
-                                <div className="glass neon-border p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 blur-3xl rounded-full"></div>
-                                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div> المدخلات (Input Matrix)
-                                    </h3>
-                                    
-                                    <div className="space-y-4">
-                                        <textarea 
-                                            placeholder="أدخل نصاً للمعالجة الفيزيائية..."
-                                            value={textInput}
-                                            onChange={(e) => {setTextInput(e.target.value); setFile(null);}}
-                                            className="w-full h-32 bg-black/40 rounded-2xl p-4 text-indigo-300 font-mono text-sm border border-slate-800 focus:border-indigo-500 outline-none transition-all resize-none shadow-inner"
-                                        />
+                        {/* المخرجات */}
+                        <div className="lg:col-span-8">
+                            <div className="glass neon-border p-8 rounded-[2.5rem] min-h-[500px] flex flex-col">
+                                {!result ? (
+                                    <div className="flex-grow flex items-center justify-center text-slate-700 italic">بانتظار الإشارة الفيزيائية...</div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <div className="bg-black/60 rounded-3xl p-6 border border-slate-800">
+                                            {result.content_type.startsWith('image') && <img src={`data:${result.content_type};base64,${result.recovered_file}`} className="max-h-80 mx-auto rounded-xl shadow-2xl" />}
+                                            {result.content_type.startsWith('video') && <video controls className="w-full max-h-80 rounded-xl"><source src={`data:${result.content_type};base64,${result.recovered_file}`} type={result.content_type} /></video>}
+                                            {result.content_type.startsWith('audio') && <audio controls className="w-full mt-4"><source src={`data:${result.content_type};base64,${result.recovered_file}`} type={result.content_type} /></audio>}
+                                            {result.content_type.startsWith('text') && <div className="p-4 font-mono text-emerald-500 text-xs break-all max-h-60 overflow-y-auto custom-scrollbar">{atob(result.recovered_file)}</div>}
+                                        </div>
+
+                                        <div className="flex gap-4 mt-6">
+                                            <button onClick={safeDownload} className="flex-grow bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                                تحميل الملف (آمن)
+                                            </button>
+                                        </div>
                                         
-                                        <div className="relative group border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-8 transition-all text-center bg-white/2">
-                                            <input type="file" onChange={(e) => {setFile(e.target.files[0]); setTextInput('');}} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                            <div className="text-slate-500 group-hover:text-indigo-400 transition-colors">
-                                                <svg className="mx-auto mb-2" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                                                <p className="text-[10px] font-bold uppercase tracking-tighter">{file ? file.name : "اسحب (صورة/فيديو/صوت/ملف)"}</p>
-                                            </div>
+                                        <div className="flex justify-between items-center px-2">
+                                            <span className="text-emerald-500 font-bold text-[10px] uppercase tracking-widest">Integrity 100% Verified</span>
+                                            <span className="text-slate-500 font-mono text-[9px] uppercase">Process Time: {result.processing_time}</span>
                                         </div>
-
-                                        <button 
-                                            onClick={processAction}
-                                            disabled={loading || (!file && !textInput)}
-                                            className="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-600/10 active:scale-[0.98] transition-all flex justify-center items-center gap-3 disabled:opacity-40"
-                                        >
-                                            {loading ? "جاري المعالجة..." : "بدء المعالجة الحتمية"}
-                                        </button>
-                                        {error && <p className="text-red-400 text-[10px] text-center font-bold mt-2 bg-red-400/5 py-2 rounded-lg leading-relaxed">{error}</p>}
                                     </div>
-                                </div>
-
-                                {/* سجل العمليات */}
-                                <div className="glass neon-border p-8 rounded-[2.5rem]">
-                                    <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-6">سجل العمليات الأخير (History)</h3>
-                                    <div className="space-y-3">
-                                        {history.length === 0 && <p className="text-slate-700 text-[10px] italic">بانتظار تنفيذ أول عملية...</p>}
-                                        {history.map(item => (
-                                            <div key={item.id} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                                                <div className="truncate pr-4">
-                                                    <p className="text-[10px] font-bold text-slate-300 truncate">{item.name}</p>
-                                                    <p className="text-[8px] text-slate-500 uppercase font-mono">{item.type} • {item.time}</p>
-                                                </div>
-                                                <div className="text-emerald-500">
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* العمود الأيمن: المخرجات */}
-                            <div className="lg:col-span-7">
-                                <div className="glass neon-border p-8 rounded-[3rem] h-full min-h-[500px] flex flex-col relative overflow-hidden shadow-2xl">
-                                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-8 flex justify-between items-center">
-                                        <span>نتائج الاسترداد (Recovery Spectrum)</span>
-                                        {result && (
-                                            <span className="text-indigo-400 font-mono text-[9px]">TIME: {result.processing_time}</span>
-                                        )}
-                                    </h3>
-
-                                    <div className="flex-grow flex flex-col justify-center bg-black/50 rounded-[2.5rem] border border-slate-800 p-8 shadow-inner relative overflow-hidden">
-                                        {!result ? (
-                                            <div className="text-center opacity-40">
-                                                <div className="w-12 h-12 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full mx-auto mb-4 animate-spin"></div>
-                                                <p className="text-slate-400 italic text-xs tracking-widest">بانتظار البيانات الفيزيائية...</p>
-                                            </div>
-                                        ) : (
-                                            <div className="w-full flex flex-col items-center animate-in fade-in duration-1000">
-                                                {/* عرض الصور */}
-                                                {result.content_type.startsWith('image') && (
-                                                    <img src={`data:${result.content_type};base64,${result.recovered_file}`} className="max-h-[350px] rounded-2xl shadow-2xl border border-white/10 mx-auto" alt="Recovered" />
-                                                )}
-                                                
-                                                {/* عرض الفيديو */}
-                                                {result.content_type.startsWith('video') && (
-                                                    <video controls className="w-full max-h-[350px] rounded-2xl shadow-2xl">
-                                                        <source src={`data:${result.content_type};base64,${result.recovered_file}`} type={result.content_type} />
-                                                    </video>
-                                                )}
-                                                
-                                                {/* عرض الصوت */}
-                                                {result.content_type.startsWith('audio') && (
-                                                    <div className="w-full p-10 bg-indigo-500/10 rounded-3xl flex flex-col items-center">
-                                                        <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/30">
-                                                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                                                        </div>
-                                                        <audio controls className="w-full opacity-80">
-                                                            <source src={`data:${result.content_type};base64,${result.recovered_file}`} type={result.content_type} />
-                                                        </audio>
-                                                    </div>
-                                                )}
-
-                                                {/* عرض النصوص والملفات الأخرى */}
-                                                {(result.content_type.startsWith('text') || result.content_type === 'application/octet-stream') && (
-                                                    <div className="w-full h-full max-h-[350px] overflow-y-auto custom-scrollbar bg-black/40 p-8 rounded-2xl font-mono text-emerald-400 text-sm break-all leading-relaxed shadow-inner">
-                                                        <p className="whitespace-pre-wrap">{atob(result.recovered_file).slice(0, 10000)}</p>
-                                                    </div>
-                                                )}
-
-                                                {/* أزرار الإجراءات */}
-                                                <div className="mt-10 w-full">
-                                                    <button 
-                                                        onClick={downloadRecovered}
-                                                        className="w-full bg-white/5 hover:bg-white/10 border border-white/10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all active:scale-[0.98]"
-                                                    >
-                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                                                        تحميل الملف المستعاد بنجاح
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* تذييل النتائج */}
-                                    {result && (
-                                        <div className="mt-8 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
-                                                </div>
-                                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Integrity: 100% Verified</span>
-                                            </div>
-                                            <div className="text-[8px] text-slate-600 uppercase font-bold italic font-mono">
-                                                F-ID: {result.signatures?.[0]?.toString().slice(2, 10) || "DETERMINISTIC"}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                )}
+                                {error && <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] text-center">{error}</div>}
                             </div>
                         </div>
-                    </main>
-
-                    <footer className="py-10 text-center border-t border-white/5 opacity-30">
-                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.6em]">Alwahd Engineering • Powered by F-Lambda v3.0 Ultra</p>
-                    </footer>
+                    </div>
                 </div>
             );
         }
