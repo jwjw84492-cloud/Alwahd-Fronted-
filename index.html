@@ -1,203 +1,79 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-Lambda Ultra | Professional Edition</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>F-Lambda Transformer</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        body { font-family: 'Space Grotesk', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); }
-        .neon-border { border: 1px solid rgba(99, 102, 241, 0.3); }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 1rem;
+        }
+        .result {
+            margin-top: 20px;
+            word-break: break-all;
+            max-width: 80%;
+        }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-100">
-    <div id="root"></div>
+<body>
+    <h1>F-Lambda Transformer</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" required>
+        <button type="submit">Transform File</button>
+    </form>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <div class="result" id="result"></div>
 
-        function App() {
-            const [file, setFile] = useState(null);
-            const [textInput, setTextInput] = useState('');
-            const [loading, setLoading] = useState(false);
-            const [progress, setProgress] = useState(0);
-            const [result, setResult] = useState(null);
-            const [history, setHistory] = useState([]);
-            const [error, setError] = useState(null);
-            
-            // <-- هنا نقطة النهاية الجديدة -->
-            const API_URL = "‏http://127.0.0.1:8000/transform";
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const resultDiv = document.getElementById('result');
 
-            // تحميل السجل من الذاكرة
-            useEffect(() => {
-                const savedHistory = localStorage.getItem('f_lambda_history');
-                if (savedHistory) setHistory(JSON.parse(savedHistory));
-            }, []);
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultDiv.textContent = "Processing...";
 
-            // حفظ السجل
-            useEffect(() => {
-                localStorage.setItem('f_lambda_history', JSON.stringify(history));
-            }, [history]);
+            const file = fileInput.files[0];
+            if (!file) return;
 
-            const addToHistory = (item) => {
-                const newItem = {
-                    id: Date.now(),
-                    name: item.filename || "Deterministic Text",
-                    type: item.content_type,
-                    time: item.processing_time,
-                    date: new Date().toLocaleTimeString('ar-SA')
-                };
-                setHistory(prev => [newItem, ...prev].slice(0, 10));
-            };
+            const formData = new FormData();
+            formData.append('file', file);
 
-            const processAction = async () => {
-                setLoading(true);
-                setError(null);
-                setProgress(20);
-                
-                try {
-                    let formData = new FormData();
-                    if (file) {
-                        formData.append('file', file);
-                    } else if (textInput) {
-                        const blob = new Blob([textInput], { type: 'text/plain' });
-                        formData.append('file', new File([blob], "text_input.txt"));
-                    } else {
-                        throw new Error("أدخل نصاً أو ارفع ملفاً");
-                    }
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
 
-                    setProgress(50);
-                    const response = await fetch(API_URL, { method: 'POST', body: formData });
-                    if (!response.ok) throw new Error("فشل المحرك السحابي");
-                    
-                    const data = await response.json();
-                    setResult(data);
-                    addToHistory(data);
-                    setProgress(100);
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setTimeout(() => { setLoading(false); setProgress(0); }, 500);
-                }
-            };
+                if (!response.ok) throw new Error("Upload failed");
 
-            const safeDownload = () => {
-                if (!result || !result.recovered_file) return;
-                try {
-                    const byteCharacters = atob(result.recovered_file);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], { type: result.content_type });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `F_Recovered_${result.filename || 'data'}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    URL.revokeObjectURL(url);
-                } catch (e) {
-                    setError("فشل التحميل: الملف كبير جداً على المتصفح");
-                }
-            };
+                const data = await response.json();
 
-            return (
-                <div className="min-h-screen p-4 md:p-12 max-w-7xl mx-auto">
-                    {loading && (
-                        <div className="fixed top-0 left-0 h-1 bg-indigo-500 z-50 transition-all duration-300" style={{width: `${progress}%`}}></div>
-                    )}
-
-                    <header className="flex justify-between items-center mb-12">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center font-bold">λ</div>
-                            <h1 className="text-2xl font-black tracking-tighter uppercase">F-Lambda <span className="text-indigo-500">PRO</span></h1>
-                        </div>
-                    </header>
-
-                    <div className="grid lg:grid-cols-12 gap-8">
-                        <div className="lg:col-span-4 space-y-6">
-                            <div className="glass neon-border p-6 rounded-3xl">
-                                <h2 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest italic">Input Area</h2>
-                                <textarea 
-                                    value={textInput}
-                                    onChange={(e) => {setTextInput(e.target.value); setFile(null);}}
-                                    placeholder="اكتب النص هنا..."
-                                    className="w-full h-32 bg-black/50 border border-slate-800 rounded-2xl p-4 text-sm focus:border-indigo-500 outline-none mb-4"
-                                />
-                                <div className="border-2 border-dashed border-slate-800 rounded-2xl p-6 text-center hover:border-indigo-500 transition-colors cursor-pointer relative">
-                                    <input type="file" onChange={(e) => setFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                    <p className="text-[10px] text-slate-400">{file ? file.name : "ارفع صورة/فيديو/صوت/ملف نصي"}</p>
-                                </div>
-                                <button 
-                                    onClick={processAction}
-                                    disabled={loading}
-                                    className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all disabled:opacity-50"
-                                >
-                                    {loading ? "جاري المعالجة..." : "بدء المعالجة"}
-                                </button>
-                            </div>
-
-                            <div className="glass neon-border p-6 rounded-3xl h-64 flex flex-col">
-                                <h2 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest italic flex justify-between">
-                                    History (Permanent)
-                                    <button onClick={() => {setHistory([]); localStorage.removeItem('f_lambda_history');}} className="text-red-500 hover:underline">Clear</button>
-                                </h2>
-                                <div className="flex-grow overflow-y-auto custom-scrollbar space-y-2">
-                                    {history.map(item => (
-                                        <div key={item.id} className="p-3 bg-white/5 rounded-xl border border-white/5 text-[10px]">
-                                            <p className="font-bold truncate">{item.name}</p>
-                                            <p className="text-slate-500 uppercase mt-1">{item.date} • {item.time}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="lg:col-span-8">
-                            <div className="glass neon-border p-8 rounded-[2.5rem] min-h-[500px] flex flex-col">
-                                {!result ? (
-                                    <div className="flex-grow flex items-center justify-center text-slate-700 italic">بانتظار الإشارة الفيزيائية...</div>
-                                ) : (
-                                    <div className="space-y-6">
-                                        <div className="bg-black/60 rounded-3xl p-6 border border-slate-800">
-                                            {result.content_type.startsWith('image') && <img src={`data:${result.content_type};base64,${result.recovered_file}`} className="max-h-80 mx-auto rounded-xl shadow-2xl" />}
-                                            {result.content_type.startsWith('video') && <video controls className="w-full max-h-80 rounded-xl"><source src={`data:${result.content_type};base64,${result.recovered_file}`} type={result.content_type} /></video>}
-                                            {result.content_type.startsWith('audio') && <audio controls className="w-full mt-4"><source src={`data:${result.content_type};base64,${result.recovered_file}`} type={result.content_type} /></audio>}
-                                            {result.content_type.startsWith('text') && <div className="p-4 font-mono text-emerald-500 text-xs break-all max-h-60 overflow-y-auto custom-scrollbar">{atob(result.recovered_file)}</div>}
-                                        </div>
-
-                                        <div className="flex gap-4 mt-6">
-                                            <button onClick={safeDownload} className="flex-grow bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
-                                                تحميل الملف (آمن)
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="flex justify-between items-center px-2">
-                                            <span className="text-emerald-500 font-bold text-[10px] uppercase tracking-widest">Integrity 100% Verified</span>
-                                            <span className="text-slate-500 font-mono text-[9px] uppercase">Process Time: {result.processing_time}</span>
-                                        </div>
-                                    </div>
-                                )}
-                                {error && <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px] text-center">{error}</div>}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+                resultDiv.innerHTML = `
+                    <strong>Filename:</strong> ${data.filename} <br>
+                    <strong>Content Type:</strong> ${data.content_type} <br>
+                    <strong>File Size:</strong> ${data.size_bytes} bytes <br>
+                    <strong>Signals Count:</strong> ${data.signals_count} <br>
+                    <strong>Processing Time:</strong> ${data.processing_time} <br>
+                    <strong>Base64 Preview (first 200 chars):</strong> <br>
+                    ${data.recovered_file.substring(0, 200)}...
+                `;
+            } catch (err) {
+                resultDiv.textContent = "Error: " + err.message;
+            }
+        });
     </script>
 </body>
 </html>
