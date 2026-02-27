@@ -1,79 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-Lambda Transformer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0a0a0a;
-            color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+‏<!DOCTYPE html>
+‏<html lang="en">
+‏<head>
+‏    <meta charset="UTF-8">
+‏    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+‏    <title>F-Lambda Transformer</title>
+‏    <style>
+‏        body {
+‏            font-family: Arial, sans-serif;
+‏            background: #0a0a0a;
+‏            color: #f0f0f0;
+‏            display: flex;
+‏            flex-direction: column;
+‏            align-items: center;
+‏            justify-content: center;
+‏            height: 100vh;
         }
-        input, button {
-            padding: 10px;
-            margin: 5px;
-            font-size: 1rem;
+‏        input, button {
+‏            padding: 10px;
+‏            margin: 5px;
+‏            font-size: 1rem;
         }
-        .result {
-            margin-top: 20px;
-            word-break: break-all;
-            max-width: 80%;
+‏        .result {
+‏            margin-top: 20px;
+‏            word-break: break-all;
+‏            max-width: 80%;
         }
-    </style>
-</head>
-<body>
-    <h1>F-Lambda Transformer</h1>
-    <form id="uploadForm">
-        <input type="file" id="fileInput" required>
-        <button type="submit">Transform File</button>
-    </form>
+‏    </style>
+‏</head>
+‏<body>
+‏    <h1>F-Lambda Transformer</h1>
+‏    <form id="uploadForm">
+‏        <input type="file" id="fileInput" required>
+‏        <button type="submit">Transform File</button>
+‏    </form>
 
-    <div class="result" id="result"></div>
+‏    <div class="result" id="result"></div>
 
-    <script>
-        const form = document.getElementById('uploadForm');
-        const fileInput = document.getElementById('fileInput');
-        const resultDiv = document.getElementById('result');
+‏    <script>
+‏        const form = document.getElementById('uploadForm');
+‏        const fileInput = document.getElementById('fileInput');
+‏        const resultDiv = document.getElementById('result');
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            resultDiv.textContent = "Processing...";
+‏        form.addEventListener('submit', async (e) => {
+‏            e.preventDefault();
+‏            resultDiv.textContent = "Processing...";
 
-            const file = fileInput.files[0];
-            if (!file) return;
+‏            const file = fileInput.files[0];
+‏            if (!file) return;
 
-            const formData = new FormData();
-            formData.append('file', file);
+‏            const formData = new FormData();
+‏            formData.append('file', file);
 
-            try {
-                const response = await fetch("/upload", {
-                    method: "POST",
-                    body: formData
+‏            try {
+‏                const response = await fetch("/upload", {
+‏                    method: "POST",
+‏                    body: formData
                 });
 
-                if (!response.ok) throw new Error("Upload failed");
+‏                if (!response.ok) throw new Error("Upload failed");
 
-                const data = await response.json();
+‏                const data = await response.json();
 
-                resultDiv.innerHTML = `
-                    <strong>Filename:</strong> ${data.filename} <br>
-                    <strong>Content Type:</strong> ${data.content_type} <br>
-                    <strong>File Size:</strong> ${data.size_bytes} bytes <br>
-                    <strong>Signals Count:</strong> ${data.signals_count} <br>
-                    <strong>Processing Time:</strong> ${data.processing_time} <br>
-                    <strong>Base64 Preview (first 200 chars):</strong> <br>
-                    ${data.recovered_file.substring(0, 200)}...
+‏                resultDiv.innerHTML = `
+‏                    <strong>Filename:</strong> ${data.filename} <br>
+‏                    <strong>Content Type:</strong> ${data.content_type} <br>
+‏                    <strong>File Size:</strong> ${data.size_bytes} bytes <br>
+‏                    <strong>Signals Count:</strong> ${data.signals_count} <br>
+‏                    <strong>Processing Time:</strong> ${data.processing_time} <br>
+‏                    <strong>Base64 Preview (first 200 chars):</strong> <br>
+‏                    ${data.recovered_file.substring(0, 200)}...
                 `;
-            } catch (err) {
-                resultDiv.textContent = "Error: " + err.message;
+‏            } catch (err) {
+‏                resultDiv.textContent = "Error: " + err.message;
             }
         });
-    </script>
-</body>
-</html>
+‏    </script>
+‏</body>
+‏</html>
