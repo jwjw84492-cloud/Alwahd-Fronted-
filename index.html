@@ -1,842 +1,180 @@
 <!DOCTYPE html>
-
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AXIOMARA — معالجة البيانات الفيزيائية</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --bg: #020408;
-      --surface: #060d14;
-      --border: #0e2233;
-      --accent: #00d4ff;
-      --accent2: #00ff9d;
-      --accent3: #ff6b35;
-      --text: #c8dde8;
-      --text-dim: #4a6478;
-      --glow: 0 0 20px rgba(0,212,255,0.3);
-      --glow2: 0 0 20px rgba(0,255,157,0.3);
-    }
-
-```
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Cairo', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* ── GRID BACKGROUND ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ── SCAN LINE ── */
-body::after {
-  content: '';
-  position: fixed;
-  top: -100%;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  animation: scan 6s linear infinite;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.4;
-}
-
-@keyframes scan {
-  0% { top: -2px; }
-  100% { top: 100%; }
-}
-
-/* ── HEADER ── */
-header {
-  position: relative;
-  z-index: 10;
-  padding: 2rem 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(0,212,255,0.04) 0%, transparent 100%);
-}
-
-.logo {
-  font-family: 'Cinzel', serif;
-  font-size: 1.8rem;
-  font-weight: 900;
-  letter-spacing: 0.3em;
-  color: var(--accent);
-  text-shadow: var(--glow);
-  animation: fadeIn 1s ease forwards;
-}
-
-.logo span {
-  color: var(--accent2);
-}
-
-.status-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  letter-spacing: 0.1em;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent2);
-  box-shadow: 0 0 8px var(--accent2);
-  animation: pulse 2s ease infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-
-/* ── HERO ── */
-.hero {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  padding: 5rem 2rem 3rem;
-  animation: fadeIn 1.2s ease forwards;
-}
-
-.hero-tag {
-  display: inline-block;
-  font-size: 0.7rem;
-  letter-spacing: 0.3em;
-  color: var(--accent);
-  border: 1px solid rgba(0,212,255,0.3);
-  padding: 0.3rem 1rem;
-  margin-bottom: 1.5rem;
-  text-transform: uppercase;
-}
-
-.hero h1 {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(2.5rem, 6vw, 5rem);
-  font-weight: 900;
-  line-height: 1.1;
-  color: #fff;
-  text-shadow: 0 0 40px rgba(0,212,255,0.2);
-  margin-bottom: 1rem;
-}
-
-.hero h1 em {
-  font-style: normal;
-  color: var(--accent);
-  text-shadow: var(--glow);
-}
-
-.hero p {
-  font-size: 1rem;
-  color: var(--text-dim);
-  max-width: 500px;
-  margin: 0 auto 2rem;
-  line-height: 1.8;
-}
-
-/* ── MAIN GRID ── */
-.main {
-  position: relative;
-  z-index: 10;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .main { grid-template-columns: 1fr; }
-  header { padding: 1.5rem; }
-  .logo { font-size: 1.3rem; }
-}
-
-/* ── PANEL ── */
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 2rem;
-  position: relative;
-  overflow: hidden;
-  animation: slideUp 0.8s ease forwards;
-  opacity: 0;
-}
-
-.panel:nth-child(1) { animation-delay: 0.1s; }
-.panel:nth-child(2) { animation-delay: 0.2s; }
-.panel.full-width {
-  grid-column: 1 / -1;
-  animation-delay: 0.3s;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.panel::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0.5;
-}
-
-.panel-title {
-  font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.25em;
-  color: var(--accent);
-  text-transform: uppercase;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.panel-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-/* ── UPLOAD ZONE ── */
-.upload-zone {
-  border: 1px dashed var(--border);
-  padding: 2.5rem 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.upload-zone:hover, .upload-zone.dragover {
-  border-color: var(--accent);
-  background: rgba(0,212,255,0.03);
-  box-shadow: var(--glow);
-}
-
-.upload-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.upload-zone p {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  margin-bottom: 0.5rem;
-}
-
-.upload-zone strong {
-  color: var(--accent);
-  font-size: 0.8rem;
-}
-
-#file-input { display: none; }
-
-/* ── API URL INPUT ── */
-.input-group {
-  margin-bottom: 1.2rem;
-}
-
-.input-group label {
-  display: block;
-  font-size: 0.72rem;
-  letter-spacing: 0.15em;
-  color: var(--text-dim);
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-}
-
-.input-group input {
-  width: 100%;
-  background: rgba(0,212,255,0.03);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 0.75rem 1rem;
-  font-family: 'Cairo', sans-serif;
-  font-size: 0.85rem;
-  outline: none;
-  transition: border-color 0.3s;
-  direction: ltr;
-}
-
-.input-group input:focus {
-  border-color: var(--accent);
-  box-shadow: var(--glow);
-}
-
-/* ── BUTTON ── */
-.btn {
-  width: 100%;
-  padding: 0.9rem;
-  background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
-  letter-spacing: 0.25em;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  z-index: -1;
-}
-
-.btn:hover {
-  color: var(--bg);
-  box-shadow: var(--glow);
-}
-
-.btn:hover::before { transform: translateX(0); }
-
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn:disabled::before { display: none; }
-
-/* ── PROCESSING INDICATOR ── */
-.processing {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  color: var(--accent);
-  font-size: 0.8rem;
-  letter-spacing: 0.15em;
-}
-
-.processing.active { display: flex; }
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── RESULTS ── */
-.results { display: none; }
-.results.active { display: block; }
-
-.result-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.8rem;
-  margin-bottom: 1.2rem;
-}
-
-.result-item {
-  background: rgba(0,212,255,0.03);
-  border: 1px solid var(--border);
-  padding: 0.8rem 1rem;
-}
-
-.result-item .label {
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  margin-bottom: 0.3rem;
-}
-
-.result-item .value {
-  font-size: 0.95rem;
-  color: var(--accent2);
-  font-weight: 600;
-  word-break: break-all;
-}
-
-.integrity-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 1rem;
-  border: 1px solid var(--accent2);
-  color: var(--accent2);
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  box-shadow: var(--glow2);
-  margin-bottom: 1.2rem;
-}
-
-/* ── SIGNATURES ── */
-.signatures-container {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
-  padding: 1rem;
-  max-height: 160px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) transparent;
-}
-
-.sig-wave {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.sig-item {
-  font-size: 0.65rem;
-  color: var(--accent);
-  font-family: monospace;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.sig-item:hover { opacity: 1; }
-
-/* ── DOWNLOAD BTN ── */
-.btn-download {
-  width: 100%;
-  padding: 0.9rem;
-  background: transparent;
-  border: 1px solid var(--accent2);
-  color: var(--accent2);
-  font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
-  letter-spacing: 0.25em;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-download::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--accent2);
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  z-index: -1;
-}
-
-.btn-download:hover {
-  color: var(--bg);
-  box-shadow: var(--glow2);
-}
-
-.btn-download:hover::before { transform: translateX(0); }
-
-/* ── LOG PANEL ── */
-.log-panel {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--border);
-  padding: 1rem;
-  max-height: 180px;
-  overflow-y: auto;
-  font-size: 0.75rem;
-  font-family: monospace;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) transparent;
-}
-
-.log-entry {
-  padding: 0.2rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  display: flex;
-  gap: 0.8rem;
-}
-
-.log-time { color: var(--text-dim); min-width: 80px; }
-.log-msg { color: var(--text); }
-.log-msg.success { color: var(--accent2); }
-.log-msg.error { color: var(--accent3); }
-.log-msg.info { color: var(--accent); }
-
-/* ── METRICS ── */
-.metrics-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.metric {
-  flex: 1;
-  background: rgba(0,212,255,0.03);
-  border: 1px solid var(--border);
-  padding: 1rem;
-  text-align: center;
-}
-
-.metric .num {
-  font-family: 'Cinzel', serif;
-  font-size: 1.8rem;
-  color: var(--accent);
-  text-shadow: var(--glow);
-}
-
-.metric .lbl {
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  margin-top: 0.3rem;
-}
-
-/* ── FILE INFO ── */
-.file-info {
-  display: none;
-  background: rgba(0,212,255,0.03);
-  border: 1px solid var(--border);
-  padding: 0.8rem 1rem;
-  margin-top: 1rem;
-  font-size: 0.8rem;
-}
-
-.file-info.active { display: flex; justify-content: space-between; align-items: center; }
-.file-info .name { color: var(--accent); }
-.file-info .size { color: var(--text-dim); font-size: 0.7rem; }
-
-/* ── FOOTER ── */
-footer {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-dim);
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
-  border-top: 1px solid var(--border);
-  margin-top: 2rem;
-}
-
-footer span { color: var(--accent); }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-```
-
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AXIOMARA v3 — N = g(ID, Ts)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --bg: #03060a; --surface: #070f18; --surface2: #0a1520; --border: #0d2035;
+            --border2: #1a3a55; --cyan: #00d4ff; --green: #00ff9d; --orange: #ff6b35;
+            --gold: #ffd700; --text: #b8ccd8; --dim: #3a5468; --white: #ffffff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg); color: var(--text); font-family: 'Tajawal', sans-serif;
+            min-height: 100vh; overflow-x: hidden;
+        }
+        /* Grid Overlay & Scanline */
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
+                              linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+            background-size: 50px 50px; pointer-events: none; z-index: 0;
+        }
+        @keyframes scan { to { top: 100%; } }
+        body::after {
+            content: ''; position: fixed; top: -2px; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg,transparent,var(--cyan),transparent);
+            animation: scan 8s linear infinite; pointer-events: none; z-index: 1; opacity: .3;
+        }
+
+        /* Header & Logo */
+        header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: relative; z-index: 10; }
+        .logo { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 900; letter-spacing: .3em; color: var(--cyan); text-shadow: 0 0 20px rgba(0,212,255,.4); }
+        .logo em { color: var(--green); font-style: normal; }
+        .vbadge { font-size: .65rem; color: var(--green); border: 1px solid var(--green); padding: .2rem .6rem; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 2s ease infinite; }
+        @keyframes pulse { 50% { opacity: .3; transform: scale(.7); } }
+
+        /* Layout Components */
+        .hero { text-align: center; padding: 3rem 2rem; animation: fadeUp 1s ease forwards; position: relative; z-index: 10; }
+        .eq { font-family: 'Cinzel', serif; font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; color: var(--white); margin-bottom: 1rem; }
+        .eq .n { color: var(--cyan); } .eq .g { color: var(--green); } .eq .ts { color: var(--gold); }
+        
+        .tabs { display: flex; max-width: 800px; margin: 0 auto; gap: 5px; padding: 0 2rem; position: relative; z-index: 10; }
+        .tab { flex: 1; padding: .8rem; background: var(--surface); border: 1px solid var(--border); color: var(--dim); cursor: pointer; transition: 0.3s; text-align: center; font-size: 0.85rem; }
+        .tab.active { background: rgba(0,212,255,0.05); border-color: var(--cyan); color: var(--cyan); }
+
+        .main { max-width: 1000px; margin: 0 auto; padding: 1.5rem 2rem; position: relative; z-index: 10; }
+        .panel { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1rem; animation: fadeUp .6s ease forwards; opacity: 0; }
+        .plbl { font-family: 'Cinzel', serif; font-size: .65rem; color: var(--cyan); text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+        .plbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* Forms & Interactive */
+        .uz { border: 1px dashed var(--border2); padding: 2rem; text-align: center; cursor: pointer; transition: .3s; }
+        .uz:hover, .uz.drag { border-color: var(--cyan); background: rgba(0,212,255,0.03); }
+        .irow input { width: 100%; background: rgba(0,212,255,0.03); border: 1px solid var(--border); color: var(--text); padding: .7rem 1rem; outline: none; direction: ltr; }
+        .btn { width: 100%; padding: .85rem; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Cinzel', serif; cursor: pointer; transition: .3s; margin-top: 1rem; }
+        .btn:hover:not(:disabled) { background: var(--cyan); color: var(--bg); box-shadow: 0 0 20px rgba(0,212,255,0.3); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Status & Logs */
+        .log { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: .8rem; max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; }
+        .ll { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.02); display: flex; gap: 10px; }
+        .info { color: var(--cyan); } .ok { color: var(--green); } .err { color: var(--orange); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .page { display: none; } .page.active { display: block; }
+    </style>
 </head>
 <body>
 
-<!-- HEADER -->
-
 <header>
-  <div class="logo">AXI<span>O</span>MARA</div>
-  <div class="status-bar">
-    <div class="status-dot"></div>
-    <span>KERNEL ACTIVE</span>
-  </div>
+    <div class="logo">AXI<em>O</em>MARA</div>
+    <div class="hdr"><div class="vbadge">v3.0</div><div class="dot"></div></div>
 </header>
 
-<!-- HERO -->
-
 <div class="hero">
-  <div class="hero-tag">Fractal Universal Kernel Transformation</div>
-  <h1>معالجة البيانات<br/><em>الفيزيائية</em></h1>
-  <p>كل ملف له هوية. كل هوية لها بصمة. كل بصمة تحمل الحقيقة الرقمية.</p>
+    <div class="eq"><span class="n">N</span> = <span class="g">g</span>(<span class="n">ID</span>, <span class="ts">Ts</span>)</div>
+    <div class="hsub">Fractal Universal Kernel Transformation</div>
 </div>
 
-<!-- METRICS -->
-
-<div class="main" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
-  <div class="metric panel" style="animation-delay:0.05s">
-    <div class="num" id="m-processed">0</div>
-    <div class="lbl">ملفات معالجة</div>
-  </div>
-  <div class="metric panel" style="animation-delay:0.1s">
-    <div class="num" id="m-time">—</div>
-    <div class="lbl">آخر زمن معالجة</div>
-  </div>
-  <div class="metric panel" style="animation-delay:0.15s">
-    <div class="num" id="m-integrity">—</div>
-    <div class="lbl">سلامة البيانات</div>
-  </div>
+<div class="tabs">
+    <div class="tab active" onclick="sw('process')">⬡ معالجة ملف</div>
+    <div class="tab" onclick="sw('compare')">⇌ مقارنة ملفين</div>
+    <div class="tab" onclick="sw('log')">◎ السجل</div>
 </div>
-
-<!-- MAIN PANELS -->
 
 <div class="main">
-
-  <!-- UPLOAD PANEL -->
-
-  <div class="panel">
-    <div class="panel-title">رفع الملف</div>
-
-```
-<div class="input-group">
-  <label>رابط API (Render)</label>
-<input type="text" id="api-url" placeholder="https://your-app.onrender.com" dir="ltr" value="https://wahed-backend-4-n47c.onrender.com"/>
-</div>
-
-<div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
-  <span class="upload-icon">⬡</span>
-  <p>اسحب الملف هنا أو انقر للاختيار</p>
-  <strong>يدعم جميع أنواع الملفات</strong>
-</div>
-<input type="file" id="file-input"/>
-
-<div class="file-info" id="file-info">
-  <span class="name" id="file-name">—</span>
-  <span class="size" id="file-size">—</span>
-</div>
-
-<div class="processing" id="processing">
-  <div class="spinner"></div>
-  <span>جاري المعالجة...</span>
-</div>
-
-<button class="btn" id="process-btn" onclick="processFile()" style="margin-top:1rem" disabled>
-  ⬡ تشغيل المعالجة
-</button>
-```
-
-  </div>
-
-  <!-- RESULTS PANEL -->
-
-  <div class="panel">
-    <div class="panel-title">نتائج المعالجة</div>
-
-```
-<div class="results" id="results">
-  <div class="integrity-badge" id="integrity-badge">
-    ✦ <span id="integrity-text">—</span>
-  </div>
-
-  <div class="result-grid">
-    <div class="result-item">
-      <div class="label">اسم الملف</div>
-      <div class="value" id="r-filename">—</div>
+    <div class="panel" style="animation-delay:.05s">
+        <div class="plbl">رابط API</div>
+        <div class="irow"><input type="text" id="api-url" placeholder="https://your-api-endpoint.com" /></div>
     </div>
-    <div class="result-item">
-      <div class="label">الحجم</div>
-      <div class="value" id="r-size">—</div>
-    </div>
-    <div class="result-item">
-      <div class="label">النوع</div>
-      <div class="value" id="r-type">—</div>
-    </div>
-    <div class="result-item">
-      <div class="label">زمن المعالجة</div>
-      <div class="value" id="r-time">—</div>
-    </div>
-  </div>
 
-  <div class="panel-title" style="margin-bottom:0.8rem">التوقيعات الفيزيائية</div>
-  <div class="signatures-container">
-    <div class="sig-wave" id="sig-wave"></div>
-  </div>
+    <div class="page active" id="page-process">
+        <div class="panel">
+            <div class="plbl">رفع وتحليل الملف</div>
+            <div class="uz" id="uz1" onclick="document.getElementById('fi1').click()">
+                <p>اسحب الملف أو انقر هنا</p>
+                <input type="file" id="fi1" hidden />
+            </div>
+            <div id="fb1" style="margin-top:10px; font-size:0.8rem; display:none;">
+                <span id="fn1" style="color:var(--cyan)"></span> — <span id="fs1"></span>
+            </div>
+            <button class="btn" id="pb1" onclick="processFile()" disabled>⬡ بدء المعالجة</button>
+        </div>
+        
+        <div class="panel" id="results-panel" style="display:none;">
+            <div class="plbl">النتائج الفنية</div>
+            <div id="res-content"></div>
+            <button class="btn" style="border-color:var(--green); color:var(--green)" onclick="dlFile()">⬇ استعادة الملف</button>
+        </div>
+    </div>
 
-  <button class="btn-download" id="download-btn" onclick="downloadFile()">
-    ⬇ استرداد الملف
-  </button>
+    <div class="page" id="page-log">
+        <div class="panel">
+            <div class="plbl">سجل النظام</div>
+            <div class="log" id="logp"></div>
+        </div>
+    </div>
 </div>
-
-<div id="no-results" style="text-align:center; padding:3rem; color:var(--text-dim); font-size:0.8rem;">
-  في انتظار المعالجة...
-</div>
-```
-
-  </div>
-
-  <!-- LOG PANEL -->
-
-  <div class="panel full-width">
-    <div class="panel-title">سجل العمليات</div>
-    <div class="log-panel" id="log-panel">
-      <div class="log-entry">
-        <span class="log-time">—</span>
-        <span class="log-msg info">AXIOMARA Kernel جاهز للمعالجة</span>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- FOOTER -->
-
-<footer>
-  <span>AXIOMARA</span> — نحو الوجود الرقمي &nbsp;|&nbsp; F_LAMBDA KERNEL v1.0
-</footer>
 
 <script>
-  let selectedFile = null;
-  let recoveredData = null;
-  let processedCount = 0;
+    let currentFile = null;
 
-  // ── DRAG & DROP ──
-  const zone = document.getElementById('upload-zone');
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('dragover');
-    const f = e.dataTransfer.files[0];
-    if (f) setFile(f);
-  });
-
-  document.getElementById('file-input').addEventListener('change', e => {
-    if (e.target.files[0]) setFile(e.target.files[0]);
-  });
-
-  function setFile(f) {
-    selectedFile = f;
-    const info = document.getElementById('file-info');
-    info.classList.add('active');
-    document.getElementById('file-name').textContent = f.name;
-    document.getElementById('file-size').textContent = formatBytes(f.size);
-    document.getElementById('process-btn').disabled = false;
-    addLog(`تم اختيار الملف: ${f.name} (${formatBytes(f.size)})`, 'info');
-  }
-
-  // ── PROCESS ──
-  async function processFile() {
-    const apiUrl = document.getElementById('api-url').value.trim();
-    if (!apiUrl) { addLog('الرجاء إدخال رابط API', 'error'); return; }
-    if (!selectedFile) { addLog('الرجاء اختيار ملف', 'error'); return; }
-
-    document.getElementById('processing').classList.add('active');
-    document.getElementById('process-btn').disabled = true;
-    document.getElementById('results').classList.remove('active');
-    document.getElementById('no-results').style.display = 'block';
-
-    addLog(`بدء معالجة: ${selectedFile.name}`, 'info');
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    try {
-      const start = performance.now();
-      const res = await fetch(`${apiUrl}/process`, { method: 'POST', body: formData });
-      const elapsed = ((performance.now() - start) / 1000).toFixed(4);
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
-      showResults(data, elapsed);
-      addLog(`اكتملت المعالجة في ${data.processing_time}`, 'success');
-      addLog(`سلامة البيانات: ${data.integrity}`, 'success');
-
-    } catch (err) {
-      addLog(`خطأ: ${err.message}`, 'error');
-      document.getElementById('no-results').style.display = 'block';
-    } finally {
-      document.getElementById('processing').classList.remove('active');
-      document.getElementById('process-btn').disabled = false;
-    }
-  }
-
-  function showResults(data, elapsed) {
-    processedCount++;
-    document.getElementById('m-processed').textContent = processedCount;
-    document.getElementById('m-time').textContent = data.processing_time || elapsed + 's';
-    document.getElementById('m-integrity').textContent = '100%';
-
-    document.getElementById('r-filename').textContent = data.filename || '—';
-    document.getElementById('r-size').textContent = formatBytes(data.size_bytes || 0);
-    document.getElementById('r-type').textContent = (data.content_type || '—').split('/')[1]?.toUpperCase() || '—';
-    document.getElementById('r-time').textContent = data.processing_time || '—';
-
-    const integrityEl = document.getElementById('integrity-text');
-    integrityEl.textContent = data.integrity || '—';
-
-    // Signatures wave
-    const wave = document.getElementById('sig-wave');
-    wave.innerHTML = '';
-    if (data.signatures) {
-      data.signatures.forEach(sig => {
-        const el = document.createElement('span');
-        el.className = 'sig-item';
-        el.textContent = typeof sig === 'number' ? sig.toFixed(6) : sig;
-        wave.appendChild(el);
-      });
+    // التنقل بين التبويبات
+    function sw(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
-    recoveredData = data.recovered_file || null;
+    // التعامل مع الملفات
+    document.getElementById('fi1').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            currentFile = file;
+            document.getElementById('fb1').style.display = 'block';
+            document.getElementById('fn1').textContent = file.name;
+            document.getElementById('fs1').textContent = (file.size / 1024).toFixed(2) + ' KB';
+            document.getElementById('pb1').disabled = false;
+            log(`تم تحميل: ${file.name}`, 'info');
+        }
+    });
 
-    document.getElementById('no-results').style.display = 'none';
-    document.getElementById('results').classList.add('active');
-  }
+    async function processFile() {
+        const url = document.getElementById('api-url').value.trim();
+        if(!url) return log("يرجى إدخال رابط الـ API", "err");
 
-  function downloadFile() {
-    if (!recoveredData) { addLog('لا توجد بيانات للتنزيل', 'error'); return; }
-    try {
-      const bytes = atob(recoveredData);
-      const arr = new Uint8Array(bytes.length);
-      for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-      const blob = new Blob([arr]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'recovered_' + (selectedFile?.name || 'file');
-      a.click();
-      URL.revokeObjectURL(url);
-      addLog('تم استرداد الملف بنجاح ✦', 'success');
-    } catch (e) {
-      addLog('فشل الاسترداد: ' + e.message, 'error');
+        log(`جاري معالجة ${currentFile.name}...`, "info");
+        document.getElementById('pb1').disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', currentFile);
+
+        try {
+            const response = await fetch(`${url}/process`, { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            document.getElementById('results-panel').style.display = 'block';
+            log("اكتملت المعالجة بنجاح", "ok");
+            // هنا يمكنك عرض البيانات في 'res-content'
+        } catch (e) {
+            log("خطأ في الاتصال بالخادم", "err");
+        } finally {
+            document.getElementById('pb1').disabled = false;
+        }
     }
-  }
 
-  function addLog(msg, type = 'info') {
-    const panel = document.getElementById('log-panel');
-    const now = new Date().toLocaleTimeString('ar-SA');
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${msg}</span>`;
-    panel.appendChild(entry);
-    panel.scrollTop = panel.scrollHeight;
-  }
-
-  function formatBytes(b) {
-    if (b === 0) return '0 B';
-    const k = 1024, sizes = ['B','KB','MB','GB'];
-    const i = Math.floor(Math.log(b) / Math.log(k));
-    return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
+    function log(msg, type) {
+        const logBox = document.getElementById('logp');
+        const time = new Date().toLocaleTimeString('ar-SA');
+        logBox.innerHTML += `<div class="ll"><span style="color:var(--dim)">${time}</span> <span class="${type}">${msg}</span></div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
 </script>
-
 </body>
 </html>
