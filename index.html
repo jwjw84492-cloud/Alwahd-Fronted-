@@ -1,180 +1,218 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AXIOMARA v3 — N = g(ID, Ts)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet"/>
-    <style>
-        :root {
-            --bg: #03060a; --surface: #070f18; --surface2: #0a1520; --border: #0d2035;
-            --border2: #1a3a55; --cyan: #00d4ff; --green: #00ff9d; --orange: #ff6b35;
-            --gold: #ffd700; --text: #b8ccd8; --dim: #3a5468; --white: #ffffff;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: var(--bg); color: var(--text); font-family: 'Tajawal', sans-serif;
-            min-height: 100vh; overflow-x: hidden;
-        }
-        /* Grid Overlay & Scanline */
-        body::before {
-            content: ''; position: fixed; inset: 0;
-            background-image: linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
-                              linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
-            background-size: 50px 50px; pointer-events: none; z-index: 0;
-        }
-        @keyframes scan { to { top: 100%; } }
-        body::after {
-            content: ''; position: fixed; top: -2px; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg,transparent,var(--cyan),transparent);
-            animation: scan 8s linear infinite; pointer-events: none; z-index: 1; opacity: .3;
-        }
-
-        /* Header & Logo */
-        header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: relative; z-index: 10; }
-        .logo { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 900; letter-spacing: .3em; color: var(--cyan); text-shadow: 0 0 20px rgba(0,212,255,.4); }
-        .logo em { color: var(--green); font-style: normal; }
-        .vbadge { font-size: .65rem; color: var(--green); border: 1px solid var(--green); padding: .2rem .6rem; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 2s ease infinite; }
-        @keyframes pulse { 50% { opacity: .3; transform: scale(.7); } }
-
-        /* Layout Components */
-        .hero { text-align: center; padding: 3rem 2rem; animation: fadeUp 1s ease forwards; position: relative; z-index: 10; }
-        .eq { font-family: 'Cinzel', serif; font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; color: var(--white); margin-bottom: 1rem; }
-        .eq .n { color: var(--cyan); } .eq .g { color: var(--green); } .eq .ts { color: var(--gold); }
-        
-        .tabs { display: flex; max-width: 800px; margin: 0 auto; gap: 5px; padding: 0 2rem; position: relative; z-index: 10; }
-        .tab { flex: 1; padding: .8rem; background: var(--surface); border: 1px solid var(--border); color: var(--dim); cursor: pointer; transition: 0.3s; text-align: center; font-size: 0.85rem; }
-        .tab.active { background: rgba(0,212,255,0.05); border-color: var(--cyan); color: var(--cyan); }
-
-        .main { max-width: 1000px; margin: 0 auto; padding: 1.5rem 2rem; position: relative; z-index: 10; }
-        .panel { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1rem; animation: fadeUp .6s ease forwards; opacity: 0; }
-        .plbl { font-family: 'Cinzel', serif; font-size: .65rem; color: var(--cyan); text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
-        .plbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-        /* Forms & Interactive */
-        .uz { border: 1px dashed var(--border2); padding: 2rem; text-align: center; cursor: pointer; transition: .3s; }
-        .uz:hover, .uz.drag { border-color: var(--cyan); background: rgba(0,212,255,0.03); }
-        .irow input { width: 100%; background: rgba(0,212,255,0.03); border: 1px solid var(--border); color: var(--text); padding: .7rem 1rem; outline: none; direction: ltr; }
-        .btn { width: 100%; padding: .85rem; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Cinzel', serif; cursor: pointer; transition: .3s; margin-top: 1rem; }
-        .btn:hover:not(:disabled) { background: var(--cyan); color: var(--bg); box-shadow: 0 0 20px rgba(0,212,255,0.3); }
-        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        /* Status & Logs */
-        .log { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: .8rem; max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; }
-        .ll { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.02); display: flex; gap: 10px; }
-        .info { color: var(--cyan); } .ok { color: var(--green); } .err { color: var(--orange); }
-
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .page { display: none; } .page.active { display: block; }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AXIOMARA v3 — N = g(ID, Ts)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#03060a;--surface:#070f18;--surface2:#0a1520;--border:#0d2035;--border2:#1a3a55;--cyan:#00d4ff;--green:#00ff9d;--orange:#ff6b35;--gold:#ffd700;--text:#b8ccd8;--dim:#3a5468;--white:#ffffff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Tajawal',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;top:-2px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scan 8s linear infinite;pointer-events:none;z-index:1;opacity:.3}
+@keyframes scan{to{top:100%}}
+header{position:relative;z-index:10;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.logo{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:900;letter-spacing:.3em;color:var(--cyan);text-shadow:0 0 20px rgba(0,212,255,.4)}
+.logo em{color:var(--green);font-style:normal}
+.vbadge{font-size:.65rem;letter-spacing:.2em;color:var(--green);border:1px solid var(--green);padding:.2rem .6rem}
+.hdr{display:flex;align-items:center;gap:1rem}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2s ease infinite}
+@keyframes pulse{50%{opacity:.3;transform:scale(.7)}}
+.hero{position:relative;z-index:10;text-align:center;padding:3rem 2rem 2rem;animation:fadeUp 1s ease forwards}
+.eq{display:inline-block;font-family:'Cinzel',serif;font-size:clamp(2rem,5vw,4rem);font-weight:900;color:var(--white);letter-spacing:.1em;text-shadow:0 0 40px rgba(0,212,255,.2);margin-bottom:1rem}
+.eq .n{color:var(--cyan)}.eq .g{color:var(--green)}.eq .ts{color:var(--gold)}
+.hsub{font-size:.85rem;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
+.tabs{position:relative;z-index:10;display:flex;max-width:800px;margin:2rem auto 0;padding:0 2rem}
+.tab{flex:1;padding:.8rem;background:var(--surface);border:1px solid var(--border);color:var(--dim);font-family:'Tajawal',sans-serif;font-size:.8rem;letter-spacing:.1em;cursor:pointer;transition:all .3s;text-align:center}
+.tab:hover{color:var(--cyan);border-color:var(--border2)}
+.tab.active{background:rgba(0,212,255,.05);border-color:var(--cyan);color:var(--cyan)}
+.main{position:relative;z-index:10;max-width:1000px;margin:0 auto;padding:1.5rem 2rem}
+.panel{background:var(--surface);border:1px solid var(--border);padding:1.5rem;position:relative;overflow:hidden;animation:fadeUp .6s ease forwards;opacity:0}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.4}
+.panel+.panel{margin-top:1rem}
+.plbl{font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.25em;color:var(--cyan);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.plbl::after{content:'';flex:1;height:1px;background:var(--border)}
+.uz{border:1px dashed var(--border2);padding:2rem;text-align:center;cursor:pointer;transition:all .3s}
+.uz:hover,.uz.drag{border-color:var(--cyan);background:rgba(0,212,255,.03)}
+.uz .ic{font-size:2rem;margin-bottom:.8rem;display:block}
+.uz p{font-size:.8rem;color:var(--dim)}
+.uz strong{color:var(--cyan);font-size:.75rem}
+input[type=file]{display:none}
+.fbadge{display:none;margin-top:.8rem;background:rgba(0,212,255,.05);border:1px solid var(--border2);padding:.5rem 1rem;font-size:.75rem;color:var(--cyan);align-items:center;justify-content:space-between}
+.fbadge.show{display:flex}
+.irow{margin-bottom:1rem}
+.irow label{display:block;font-size:.65rem;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-bottom:.4rem}
+.irow input{width:100%;background:rgba(0,212,255,.03);border:1px solid var(--border);color:var(--text);padding:.7rem 1rem;font-family:'Tajawal',sans-serif;font-size:.85rem;outline:none;direction:ltr;transition:border-color .3s}
+.irow input:focus{border-color:var(--cyan)}
+.btn{width:100%;padding:.85rem;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:'Cinzel',serif;font-size:.75rem;letter-spacing:.2em;cursor:pointer;text-transform:uppercase;transition:all .3s;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:var(--cyan);transform:translateX(-100%);transition:transform .3s;z-index:-1}
+.btn:hover{color:var(--bg);box-shadow:0 0 20px rgba(0,212,255,.3)}
+.btn:hover::after{transform:translateX(0)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn:disabled::after{display:none}
+.btn:disabled:hover{color:var(--cyan);box-shadow:none}
+.btng{border-color:var(--green);color:var(--green)}
+.btng::after{background:var(--green)}
+.btng:hover{color:var(--bg);box-shadow:0 0 20px rgba(0,255,157,.3)}
+.sprow{display:none;align-items:center;justify-content:center;gap:.8rem;padding:1rem;color:var(--cyan);font-size:.75rem;letter-spacing:.15em}
+.sprow.show{display:flex}
+.spin{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--cyan);border-radius:50%;animation:rotate .7s linear infinite}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.results{display:none}.results.show{display:block}
+.vbanner{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.6rem;margin-bottom:1rem;border:1px solid var(--green);color:var(--green);font-size:.8rem;letter-spacing:.2em;box-shadow:0 0 15px rgba(0,255,157,.15)}
+.sgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:1rem}
+.stat{background:rgba(0,212,255,.03);border:1px solid var(--border);padding:.7rem 1rem}
+.stat .lbl{font-size:.6rem;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-bottom:.3rem}
+.stat .val{font-size:.9rem;color:var(--cyan);font-weight:700;word-break:break-all}
+.idbox{background:rgba(0,0,0,.4);border:1px solid var(--border2);padding:1rem;margin-bottom:1rem}
+.idrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.idrow:last-child{margin:0}
+.idlbl{font-size:.65rem;letter-spacing:.15em;color:var(--dim);text-transform:uppercase}
+.idval{font-family:monospace;font-size:.8rem;color:var(--green);letter-spacing:.05em}
+.waves{background:rgba(0,0,0,.3);border:1px solid var(--border);padding:.8rem;max-height:120px;overflow-y:auto;margin-bottom:1rem;scrollbar-width:thin;scrollbar-color:var(--cyan) transparent}
+.ww{display:flex;flex-wrap:wrap;gap:.3rem}
+.w{font-size:.6rem;color:var(--cyan);font-family:monospace;opacity:.6}
+.w:hover{opacity:1}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.cres{display:none;margin-top:1rem;padding:1rem;border:1px solid var(--border2);background:rgba(0,0,0,.3)}
+.cres.show{display:block}
+.mrow{display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.mrow:last-child{border:none}
+.mk{color:var(--dim)}.mv{font-family:monospace;font-size:.75rem}
+.mv.yes{color:var(--green)}.mv.no{color:var(--orange)}
+.log{background:rgba(0,0,0,.4);border:1px solid var(--border);padding:.8rem;max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--cyan) transparent}
+.ll{display:flex;gap:.8rem;padding:.2rem 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.7rem;font-family:monospace}
+.lt{color:var(--dim);min-width:75px}.lm{color:var(--text)}
+.lm.ok{color:var(--green)}.lm.err{color:var(--orange)}.lm.info{color:var(--cyan)}
+footer{position:relative;z-index:10;text-align:center;padding:1.5rem;color:var(--dim);font-size:.65rem;letter-spacing:.15em;border-top:1px solid var(--border);margin-top:2rem}
+footer span{color:var(--cyan)}
+.page{display:none}.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.cgrid{grid-template-columns:1fr}.sgrid{grid-template-columns:1fr}.tabs{flex-direction:column}}
+</style>
 </head>
 <body>
-
 <header>
-    <div class="logo">AXI<em>O</em>MARA</div>
-    <div class="hdr"><div class="vbadge">v3.0</div><div class="dot"></div></div>
+  <div class="logo">AXI<em>O</em>MARA</div>
+  <div class="hdr"><div class="vbadge">v3.0</div><div class="dot"></div></div>
 </header>
-
 <div class="hero">
-    <div class="eq"><span class="n">N</span> = <span class="g">g</span>(<span class="n">ID</span>, <span class="ts">Ts</span>)</div>
-    <div class="hsub">Fractal Universal Kernel Transformation</div>
+  <div class="eq"><span class="n">N</span> = <span class="g">g</span>(<span class="n">ID</span>, <span class="ts">Ts</span>)</div>
+  <div class="hsub">Fractal Universal Kernel Transformation</div>
 </div>
-
 <div class="tabs">
-    <div class="tab active" onclick="sw('process')">⬡ معالجة ملف</div>
-    <div class="tab" onclick="sw('compare')">⇌ مقارنة ملفين</div>
-    <div class="tab" onclick="sw('log')">◎ السجل</div>
+  <div class="tab active" onclick="sw('process')">⬡ معالجة ملف</div>
+  <div class="tab" onclick="sw('compare')">⇌ مقارنة ملفين</div>
+  <div class="tab" onclick="sw('log')">◎ سجل العمليات</div>
 </div>
-
 <div class="main">
-    <div class="panel" style="animation-delay:.05s">
-        <div class="plbl">رابط API</div>
-        <div class="irow"><input type="text" id="api-url" placeholder="https://your-api-endpoint.com" value="https://wahed-backend-6-5glg.onrender.com"/></div>
+  <div class="panel" style="animation-delay:.05s">
+    <div class="plbl">رابط API</div>
+    <div class="irow" style="margin:0"><input type="text" id="api-url" placeholder="https://your-app.onrender.com" value="https://wahed-backend-6-5glg.onrender.com"
+dir="ltr"/></div>
+  </div>
+  <!-- PROCESS -->
+  <div class="page active" id="page-process">
+    <div class="panel" style="animation-delay:.1s">
+      <div class="plbl">رفع الملف</div>
+      <div class="uz" id="uz1" onclick="document.getElementById('fi1').click()">
+        <span class="ic">⬡</span><p>اسحب الملف أو انقر للاختيار</p><strong>يدعم جميع أنواع الملفات</strong>
+      </div>
+      <input type="file" id="fi1"/>
+      <div class="fbadge" id="fb1"><span id="fn1">—</span><span id="fs1" style="color:var(--dim)">—</span></div>
+      <div class="sprow" id="sp1"><div class="spin"></div><span>جاري المعالجة...</span></div>
+      <button class="btn" id="pb1" onclick="processFile()" style="margin-top:1rem" disabled>⬡ تشغيل المعالجة</button>
     </div>
-
-    <div class="page active" id="page-process">
-        <div class="panel">
-            <div class="plbl">رفع وتحليل الملف</div>
-            <div class="uz" id="uz1" onclick="document.getElementById('fi1').click()">
-                <p>اسحب الملف أو انقر هنا</p>
-                <input type="file" id="fi1" hidden />
-            </div>
-            <div id="fb1" style="margin-top:10px; font-size:0.8rem; display:none;">
-                <span id="fn1" style="color:var(--cyan)"></span> — <span id="fs1"></span>
-            </div>
-            <button class="btn" id="pb1" onclick="processFile()" disabled>⬡ بدء المعالجة</button>
+    <div class="panel" style="animation-delay:.15s">
+      <div class="plbl">النتائج</div>
+      <div class="results" id="results">
+        <div class="vbanner" id="ibanner">✦ —</div>
+        <div class="sgrid">
+          <div class="stat"><div class="lbl">اسم الملف</div><div class="val" id="rn">—</div></div>
+          <div class="stat"><div class="lbl">الحجم</div><div class="val" id="rs">—</div></div>
+          <div class="stat"><div class="lbl">النوع</div><div class="val" id="rt">—</div></div>
+          <div class="stat"><div class="lbl">زمن المعالجة</div><div class="val" id="rti">—</div></div>
         </div>
-        
-        <div class="panel" id="results-panel" style="display:none;">
-            <div class="plbl">النتائج الفنية</div>
-            <div id="res-content"></div>
-            <button class="btn" style="border-color:var(--green); color:var(--green)" onclick="dlFile()">⬇ استعادة الملف</button>
+        <div class="plbl" style="margin-bottom:.8rem">هوية الملف — ID</div>
+        <div class="idbox">
+          <div class="idrow"><span class="idlbl">Fingerprint</span><span class="idval" id="rfp">—</span></div>
+          <div class="idrow"><span class="idlbl">Order Print</span><span class="idval" id="rop">—</span></div>
+          <div class="idrow"><span class="idlbl">SHA256</span><span class="idval" id="rsha" style="font-size:.6rem;word-break:break-all">—</span></div>
         </div>
+        <div class="plbl" style="margin-bottom:.5rem">الإشارات الفيزيائية</div>
+        <div class="waves"><div class="ww" id="ww"></div></div>
+        <button class="btn btng" onclick="dlFile()">⬇ استرداد الملف</button>
+      </div>
+      <div id="nr" style="text-align:center;padding:2rem;color:var(--dim);font-size:.8rem">في انتظار المعالجة...</div>
     </div>
-
-    <div class="page" id="page-log">
-        <div class="panel">
-            <div class="plbl">سجل النظام</div>
-            <div class="log" id="logp"></div>
+  </div>
+  <!-- COMPARE -->
+  <div class="page" id="page-compare">
+    <div class="panel" style="animation-delay:.1s">
+      <div class="plbl">مقارنة ملفين — إثبات التفرد</div>
+      <div class="cgrid">
+        <div>
+          <div class="uz" id="uz2" onclick="document.getElementById('fi2').click()" style="padding:1.2rem">
+            <span class="ic" style="font-size:1.5rem">①</span><p>الملف الأول</p>
+          </div>
+          <input type="file" id="fi2"/>
+          <div class="fbadge" id="fb2"><span id="fn2">—</span><span id="fs2" style="color:var(--dim)">—</span></div>
         </div>
+        <div>
+          <div class="uz" id="uz3" onclick="document.getElementById('fi3').click()" style="padding:1.2rem">
+            <span class="ic" style="font-size:1.5rem">②</span><p>الملف الثاني</p>
+          </div>
+          <input type="file" id="fi3"/>
+          <div class="fbadge" id="fb3"><span id="fn3">—</span><span id="fs3" style="color:var(--dim)">—</span></div>
+        </div>
+      </div>
+      <div class="sprow" id="sp2"><div class="spin"></div><span>جاري المقارنة...</span></div>
+      <button class="btn" id="pb2" onclick="compareFiles()" disabled>⇌ مقارنة وإثبات التفرد</button>
+      <div class="cres" id="cres">
+        <div class="plbl" style="margin-bottom:.8rem">نتيجة المقارنة</div>
+        <div class="cgrid" style="margin-bottom:1rem">
+          <div><div style="font-size:.65rem;color:var(--dim);margin-bottom:.4rem">FINGERPRINT — ملف ١</div><div style="font-family:monospace;font-size:.75rem;color:var(--cyan)" id="cfp1">—</div></div>
+          <div><div style="font-size:.65rem;color:var(--dim);margin-bottom:.4rem">FINGERPRINT — ملف ٢</div><div style="font-family:monospace;font-size:.75rem;color:var(--cyan)" id="cfp2">—</div></div>
+        </div>
+        <div class="mrow"><span class="mk">نفس الملف؟</span><span class="mv" id="csame">—</span></div>
+        <div class="mrow"><span class="mk">نفس الـ Fingerprint؟</span><span class="mv" id="csfp">—</span></div>
+        <div class="mrow"><span class="mk">نفس الـ Order Print؟</span><span class="mv" id="csop">—</span></div>
+        <div class="mrow" style="border:none;padding-top:.8rem"><span class="mk" style="color:var(--white);font-size:.85rem">الهوية فريدة؟</span><span class="mv" id="cuniq" style="font-size:.9rem">—</span></div>
+      </div>
     </div>
+  </div>
+  <!-- LOG -->
+  <div class="page" id="page-log">
+    <div class="panel" style="animation-delay:.1s">
+      <div class="plbl">سجل العمليات</div>
+      <div class="log" id="logp">
+        <div class="ll"><span class="lt">—</span><span class="lm info">AXIOMARA v3.0 — N = g(ID, Ts) — جاهز</span></div>
+      </div>
+    </div>
+  </div>
 </div>
-
+<footer><span>AXIOMARA</span> v3.0 &nbsp;|&nbsp; N = g(ID, Ts) &nbsp;|&nbsp; F_LAMBDA KERNEL</footer>
 <script>
-    let currentFile = null;
-
-    // التنقل بين التبويبات
-    function sw(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
-
-    // التعامل مع الملفات
-    document.getElementById('fi1').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            currentFile = file;
-            document.getElementById('fb1').style.display = 'block';
-            document.getElementById('fn1').textContent = file.name;
-            document.getElementById('fs1').textContent = (file.size / 1024).toFixed(2) + ' KB';
-            document.getElementById('pb1').disabled = false;
-            log(`تم تحميل: ${file.name}`, 'info');
-        }
-    });
-
-    async function processFile() {
-        const url = document.getElementById('api-url').value.trim();
-        if(!url) return log("يرجى إدخال رابط الـ API", "err");
-
-        log(`جاري معالجة ${currentFile.name}...`, "info");
-        document.getElementById('pb1').disabled = true;
-
-        const formData = new FormData();
-        formData.append('file', currentFile);
-
-        try {
-            const response = await fetch(`${url}/process`, { method: 'POST', body: formData });
-            const data = await response.json();
-            
-            document.getElementById('results-panel').style.display = 'block';
-            log("اكتملت المعالجة بنجاح", "ok");
-            // هنا يمكنك عرض البيانات في 'res-content'
-        } catch (e) {
-            log("خطأ في الاتصال بالخادم", "err");
-        } finally {
-            document.getElementById('pb1').disabled = false;
-        }
-    }
-
-    function log(msg, type) {
-        const logBox = document.getElementById('logp');
-        const time = new Date().toLocaleTimeString('ar-SA');
-        logBox.innerHTML += `<div class="ll"><span style="color:var(--dim)">${time}</span> <span class="${type}">${msg}</span></div>`;
-        logBox.scrollTop = logBox.scrollHeight;
-    }
+let f1=null,rec=null,cf1=null,cf2=null;
+function sw(n){document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['process','compare','log'][i]===n));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+n).classList.add('active')}
+['uz1','uz2','uz3'].forEach((id,idx)=>{const el=document.getElementById(id);el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag')});el.addEventListener('dragleave',()=>el.classList.remove('drag'));el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)[sf1,scf1,scf2][idx](f)})});
+document.getElementById('fi1').addEventListener('change',e=>{if(e.target.files[0])sf1(e.target.files[0])});
+document.getElementById('fi2').addEventListener('change',e=>{if(e.target.files[0])scf1(e.target.files[0])});
+document.getElementById('fi3').addEventListener('change',e=>{if(e.target.files[0])scf2(e.target.files[0])});
+function sf1(f){f1=f;document.getElementById('fb1').classList.add('show');document.getElementById('fn1').textContent=f.name;document.getElementById('fs1').textContent=fmt(f.size);document.getElementById('pb1').disabled=false;lg('تم اختيار: '+f.name+' ('+fmt(f.size)+')','info')}
+function scf1(f){cf1=f;document.getElementById('fb2').classList.add('show');document.getElementById('fn2').textContent=f.name;document.getElementById('fs2').textContent=fmt(f.size);chk()}
+function scf2(f){cf2=f;document.getElementById('fb3').classList.add('show');document.getElementById('fn3').textContent=f.name;document.getElementById('fs3').textContent=fmt(f.size);chk()}
+function chk(){document.getElementById('pb2').disabled=!(cf1&&cf2)}
+async function processFile(){const url=document.getElementById('api-url').value.trim();if(!url){lg('أدخل رابط API','err');return}if(!f1){lg('اختر ملفاً','err');return}document.getElementById('sp1').classList.add('show');document.getElementById('pb1').disabled=true;document.getElementById('results').classList.remove('show');document.getElementById('nr').style.display='block';lg('بدء معالجة: '+f1.name,'info');const fd=new FormData();fd.append('file',f1);try{const res=await fetch(url+'/process',{method:'POST',body:fd});if(!res.ok)throw new Error('HTTP '+res.status);const d=await res.json();showR(d);lg('اكتملت في '+d.processing_time,'ok');lg('سلامة: '+d.integrity,'ok')}catch(e){lg('خطأ: '+e.message,'err')}finally{document.getElementById('sp1').classList.remove('show');document.getElementById('pb1').disabled=false}}
+function showR(d){document.getElementById('rn').textContent=d.filename||'—';document.getElementById('rs').textContent=fmt(d.size_bytes||0);document.getElementById('rt').textContent=(d.content_type||'—').split('/')[1]?.toUpperCase()||'—';document.getElementById('rti').textContent=d.processing_time||'—';document.getElementById('ibanner').textContent='✦ '+d.integrity;const id=d.id||{};document.getElementById('rfp').textContent=id.fingerprint??'—';document.getElementById('rop').textContent=id.order_print??'—';document.getElementById('rsha').textContent=(id.sha256||'—').substring(0,32)+'...';const wv=document.getElementById('ww');wv.innerHTML='';(d.signatures||[]).forEach(s=>{const el=document.createElement('span');el.className='w';el.textContent=typeof s==='number'?s.toFixed(6):s;wv.appendChild(el)});rec=d.recovered_file||null;document.getElementById('nr').style.display='none';document.getElementById('results').classList.add('show')}
+async function compareFiles(){const url=document.getElementById('api-url').value.trim();if(!url){lg('أدخل رابط API','err');return}document.getElementById('sp2').classList.add('show');document.getElementById('pb2').disabled=true;document.getElementById('cres').classList.remove('show');lg('مقارنة: '+cf1.name+' ↔ '+cf2.name,'info');const fd=new FormData();fd.append('file1',cf1);fd.append('file2',cf2);try{const res=await fetch(url+'/compare',{method:'POST',body:fd});if(!res.ok)throw new Error('HTTP '+res.status);const d=await res.json();showC(d);lg('المقارنة اكتملت في '+d.processing_time,'ok')}catch(e){lg('خطأ: '+e.message,'err')}finally{document.getElementById('sp2').classList.remove('show');document.getElementById('pb2').disabled=false}}
+function showC(d){const r=d.result||{};document.getElementById('cfp1').textContent=d.file1?.fingerprint??'—';document.getElementById('cfp2').textContent=d.file2?.fingerprint??'—';sm('csame',!r.same_file,r.same_file?'نعم — نفس الملف':'لا — ملفان مختلفان');sm('csfp',!r.same_fingerprint,r.same_fingerprint?'متطابق ⚠️':'مختلف ✅');sm('csop',!r.same_order_print,r.same_order_print?'متطابق ⚠️':'مختلف ✅');sm('cuniq',r.unique,r.unique?'✅ نعم — هوية فريدة':'❌ لا — تصادم محتمل');document.getElementById('cres').classList.add('show')}
+function sm(id,pos,txt){const el=document.getElementById(id);el.textContent=txt;el.className='mv '+(pos?'yes':'no')}
+function dlFile(){if(!rec){lg('لا توجد بيانات','err');return}try{const b=atob(rec),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);const u=URL.createObjectURL(new Blob([a])),el=document.createElement('a');el.href=u;el.download='recovered_'+(f1?.name||'file');el.click();URL.revokeObjectURL(u);lg('تم استرداد الملف بنجاح ✦','ok')}catch(e){lg('فشل: '+e.message,'err')}}
+function lg(msg,type='info'){const p=document.getElementById('logp'),now=new Date().toLocaleTimeString('ar-SA'),d=document.createElement('div');d.className='ll';d.innerHTML='<span class="lt">'+now+'</span><span class="lm '+type+'">'+msg+'</span>';p.appendChild(d);p.scrollTop=p.scrollHeight}
+function fmt(b){if(!b)return'0 B';const k=1024,s=['B','KB','MB','GB'],i=Math.floor(Math.log(b)/Math.log(k));return(b/Math.pow(k,i)).toFixed(2)+' '+s[i]}
 </script>
 </body>
 </html>
